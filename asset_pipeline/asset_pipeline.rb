@@ -1,9 +1,8 @@
 module Jekyll
 
-  ASSET_CACHE_DIR = ".asset_cache"
-
   class AssetPipeline < Generator
-    require 'pathname'
+    require 'yaml'
+    require 'digest/sha1'
 
     safe true
     
@@ -23,9 +22,18 @@ module Jekyll
       self.project_source = File.expand_path(config['source'])
       self.project_dest = File.expand_path(config['destination'])
 
-      @cache_root = File.join(self.project_source, self.asset_source, ASSET_CACHE_DIR)
-      #TODO: check if files in cache are newer than the source files and don't regenerate everything
-      FileUtils.rm_rf(@cache_root)
+      @asset_cache_dir = ".asset_cache"
+      @cache_root = File.join(self.project_source, self.asset_source, @asset_cache_dir)
+
+      # load map file which contains the SHA1 hash of every file the last time it was processed
+      @map_file = File.join(@cache_root, ".map")
+      @map = Hash.new
+      begin
+        @map = YAML.load_file(@map_file) if File.exists?(@map_file)
+      rescue Exception
+        #noop
+      end
+      @map = Hash.new if @map == nil || !(@map.is_a? Hash)
 
       puts "          Assets..."
 
@@ -59,6 +67,15 @@ module Jekyll
     # Convert assets based on the file extension if converter is defined
     def process
       @assets.each do |asset|
+        path = File.join(asset.dir, asset.original_name)
+        # appending "sha1" because the YAML serializer seems to detect that 
+        # the string is in hex and writes it out in base-64
+        hash = "sha1:" + Digest::SHA1.hexdigest(asset.content).to_s
+        # skip processing this asset if the hash is the same
+        #puts "#{hash} | #{@map[path]}"
+        next if @map[path] == hash
+        # if we haven't skipped, then store the hash in the map
+        @map[path] = hash
         # Convert asset multiple times if more than one converter is found
         finished = false
         # Create a duplicate of the converters for the site so we can mutate the array
@@ -114,10 +131,15 @@ module Jekyll
         end
 
         # Add the asset cache directory to the base path so the files will be picked up on disk
-        asset.base = File.join(asset.base, ASSET_CACHE_DIR)
+        asset.base = File.join(asset.base, @asset_cache_dir)
         # add it to the sites static_files array
         @site.static_files << asset
 
+      end
+
+      # dump the file mapping
+      File.open(@map_file, 'w') do |file|
+        file.write(YAML::dump(@map))
       end
       puts "  Assets processed."
     end
