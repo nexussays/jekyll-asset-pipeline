@@ -38,7 +38,7 @@ module Jekyll
       #TODO: check if files in cache are newer than the source files and don't regenerate everything
       FileUtils.rm_rf(@cache_root)
 
-      puts "Processing asset pipeline..."
+      puts "          Assets..."
 
       @assets = []
       self.read_files(self.asset_source)
@@ -60,7 +60,10 @@ module Jekyll
           next if @cache_root == f_abs
           read_files(f_rel)
         elsif !File.symlink?(f_abs)
-          @assets << Asset.new(@site, File.join(self.project_source, self.asset_source), dir.gsub(self.asset_source, ""), f)
+          @assets << Asset.new(@site,
+              File.join(self.project_source, self.asset_source),
+              self.asset_dest,
+              dir.gsub(self.asset_source, ""), f)
         end
       end
     end
@@ -115,7 +118,7 @@ module Jekyll
     def write
       # write out each procssed asset file to the cache
       @assets.each do |asset|
-        cache =  asset.destination(@cache_root)
+        cache =  File.join(@cache_root, asset.dir, asset.name)
 
         # save assets to cache
         FileUtils.mkdir_p(File.dirname(cache))
@@ -124,29 +127,40 @@ module Jekyll
           file.write(asset.content)
         end
 
-        # change each asset to point to the cached file on disk and add it to the sites static_files array
-        #puts "#{asset.base} | #{asset.dir} | #{asset.name}"
-        asset.dir = File.join(ASSET_CACHE_DIR, asset.dir)
-        #puts asset.path
-        #@site.static_files << asset
+        # Add the asset cache directory to the base path so the files will be picked up on disk
+        asset.base = File.join(asset.base, ASSET_CACHE_DIR)
+        # add it to the sites static_files array
+        @site.static_files << asset
 
       end
-      puts "Assets processed."
+      puts "  Assets processed."
     end
 
   end
 
   class Asset < Jekyll::StaticFile
 
-    attr_reader :original_name, :base
-    attr_accessor :dir, :name, :ext, :content
+    attr_reader :original_name, :dest
+    attr_accessor :dir, :name, :ext, :content, :base
 
-    def initialize(site, base, dir, name)
+    def initialize(site, base, dest, dir, name)
       super(site, base, dir, name)
       @original_name = name
+      @dest = dest
       self.ext = File.extname(name)
       self.content = File.read(File.join(base, dir, name))
     end
+
+    # override destination to append asset destination path
+    def destination(dest)
+      File.join(dest, @dest, @dir, @name)
+    end
+
+    #def write(dest)
+    #  puts "Write: #{self.name}\n  #{@base}\n  #{destination(dest)}\n  #{dir}"
+    #  super
+    #end
+
   end
 
 end
