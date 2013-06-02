@@ -1,6 +1,6 @@
 module Jekyll
-
   class CssCompressor < Converter
+    gem 'sass', '~> 3.2'
     require 'sass'
     safe true
     priority :low
@@ -19,9 +19,7 @@ module Jekyll
     end
 
     def convert(content)
-      #puts "compressing"
       return Sass::Engine.new(content, :syntax => :scss, :style => :compressed).render
     end
   end
-
 end

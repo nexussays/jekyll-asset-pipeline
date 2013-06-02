@@ -1,6 +1,6 @@
 module Jekyll
-
   class JsCompressor < Converter
+    gem 'closure-compiler', '~> 1.1'
     require 'closure-compiler'
     safe true
     priority :low
@@ -22,5 +22,4 @@ module Jekyll
       return Closure::Compiler.new.compile(content)
     end
   end
-
 end

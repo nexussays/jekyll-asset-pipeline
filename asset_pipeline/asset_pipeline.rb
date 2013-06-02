@@ -7,9 +7,7 @@ module Jekyll
 
     safe true
     
-    attr_accessor :project_source, :project_dest
-    # _config.yml value
-    attr_accessor :asset_source, :asset_dest, :fail_on_error
+    attr_accessor :project_source, :project_dest, :asset_source
 
     def generate(site)
       # I hate having the output being on the same line as Jekyll's "Generating..."
@@ -18,19 +16,10 @@ module Jekyll
       @site = site
       config = @site.config
 
-      # Don't assume defaults. Require source and destination to be set in _config.yml
-      if config['asset_pipeline'] == nil || config['asset_pipeline']['source'] == nil ||
-         config['asset_pipeline']['destination'] == nil
-        raise "\nAsset pipeline requires source and destination defined in _config.yml, eg:\n" +
-          "asset_pipeline:\n" +
-          "  source:       ./_assets\n" +
-          "  destination:  .\n"
-      end
+      # Don't assume defaults. Require directories to be set so the error can explain how it works
+      raise "\nAsset pipeline requires source directory defined in _config.yml, eg:\nassets: ./_assets\n" if config['assets'] == nil
 
-      self.asset_source = config['asset_pipeline']['source']
-      self.asset_dest = config['asset_pipeline']['destination']
-      self.fail_on_error = config['asset_pipeline']['fail_on_error']
-
+      self.asset_source = config['assets']
       self.project_source = File.expand_path(config['source'])
       self.project_dest = File.expand_path(config['destination'])
 
@@ -62,7 +51,6 @@ module Jekyll
         elsif !File.symlink?(f_abs)
           @assets << Asset.new(@site,
               File.join(self.project_source, self.asset_source),
-              self.asset_dest,
               dir.gsub(self.asset_source, ""), f)
         end
       end
@@ -98,12 +86,10 @@ module Jekyll
                 asset.ext = File.extname(asset.name)  
               end
             rescue Exception => e
+              # Don't raise the exception higher, output the info and carry on.
+              # Inform the user and let them decide if they want to act or not.
               puts "#{converter} failed on file '#{asset.original_name}'"
-              if self.fail_on_error
-                raise e
-              else
-                puts e
-              end
+              puts e
             ensure
               # remove converter from the list so we don't run again or end up in an infinite loop
               converters.delete(converter)
@@ -118,7 +104,7 @@ module Jekyll
     def write
       # write out each procssed asset file to the cache
       @assets.each do |asset|
-        cache =  File.join(@cache_root, asset.dir, asset.name)
+        cache =  asset.destination(@cache_root)
 
         # save assets to cache
         FileUtils.mkdir_p(File.dirname(cache))
@@ -140,26 +126,18 @@ module Jekyll
 
   class Asset < Jekyll::StaticFile
 
-    attr_reader :original_name, :dest
-    attr_accessor :dir, :name, :ext, :content, :base
+    # In addition to adding our new attributes...
+    attr_reader :original_name
+    attr_accessor :ext, :content
+    # ...expose the private fields of Jekyll::StaticFile
+    attr_accessor :dir, :name, :base
 
-    def initialize(site, base, dest, dir, name)
+    def initialize(site, base, dir, name)
       super(site, base, dir, name)
       @original_name = name
-      @dest = dest
       self.ext = File.extname(name)
       self.content = File.read(File.join(base, dir, name))
     end
-
-    # override destination to append asset destination path
-    def destination(dest)
-      File.join(dest, @dest, @dir, @name)
-    end
-
-    #def write(dest)
-    #  puts "Write: #{self.name}\n  #{@base}\n  #{destination(dest)}\n  #{dir}"
-    #  super
-    #end
 
   end
 
