@@ -34,8 +34,9 @@ module Jekyll
       self.project_source = File.expand_path(config['source'])
       self.project_dest = File.expand_path(config['destination'])
 
-      #TODO: check if files in cache are newer than the source files and don't regenerate everything
       @cache_root = File.join(self.project_source, self.asset_source, ASSET_CACHE_DIR)
+      #TODO: check if files in cache are newer than the source files and don't regenerate everything
+      FileUtils.rm_rf(@cache_root)
 
       puts "Processing asset pipeline..."
 
@@ -71,19 +72,27 @@ module Jekyll
         finished = false
         # Create a duplicate of the converters for the site so we can mutate the array
         converters = @site.converters.dup
+        # remember each removed extension so we can restore the last one once no converters are found
+        last_ext = ""
         while !finished
           # get the highest priority converter
           converter = converters.find { |c| c.matches(asset.ext) }
           if converter != nil
             begin
               # don't run on identity converter
-              unless converter.is_a? Jekyll::Converters::Identity
+              if converter.is_a? Jekyll::Converters::Identity
+                # restore the last extension once we reach the identity converter
+                asset.name += last_ext
+                asset.ext = last_ext
+              else
                 # run converter
                 asset.content = converter.convert(asset.content)
                 # remove extension instead of replacing it with converter.out_ext
                 asset.name = File.basename(asset.name, asset.ext)
+                # store current extension in case this is the last conversion and we need to restore it
+                last_ext = asset.ext
                 # set the new extension
-                asset.ext = File.extname(asset.name)
+                asset.ext = File.extname(asset.name)  
               end
             rescue Exception => e
               puts "#{converter} failed on file '#{asset.original_name}'"
