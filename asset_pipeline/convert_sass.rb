@@ -14,7 +14,7 @@ module Jekyll
       ext =~ /^\.s[ac]ss$/i
     end
 
-    def output_ext
+    def output_ext(ext)
       ".css"
     end
 
