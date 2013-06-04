@@ -8,6 +8,13 @@ module Jekyll
     
     attr_accessor :project_source, :project_dest, :asset_source
 
+    def initialize(config)
+      @includes_dir = "_includes"
+      @error_include_file = "asset_pipeline_errors"
+      @error_log_file = "asset_pipeline_errors.log"
+      @asset_cache_dir = ".asset_cache"
+    end
+
     def generate(site)
       # I hate having the output being on the same line as Jekyll's "Generating..."
       puts
@@ -22,8 +29,6 @@ module Jekyll
       self.project_source = File.expand_path(config['source'])
       self.project_dest = File.expand_path(config['destination'])
 
-      @error_log_file = "asset_pipeline_errors.log"
-      @asset_cache_dir = ".asset_cache"
       @cache_root = File.join(self.project_source, self.asset_source, @asset_cache_dir)
 
       # load map file which contains the SHA1 hash of every file the last time it was processed
@@ -108,7 +113,7 @@ module Jekyll
               converter_ext = converter.output_ext(asset.ext)
               # now remove current extension
               asset.name = File.basename(asset.name, asset.ext)
-              puts "#{asset.original_name}: #{converter.class.name}: #{last_ext} | #{converter_ext} | #{asset.ext}"
+              #puts "#{asset.original_name}: #{converter.class.name}: #{last_ext} | #{converter_ext} | #{asset.ext}"
               # if the converter extension is not the same as the next in the chain, add the converter extension back
               if asset.ext != converter_ext
                 asset.name = asset.name + converter_ext
@@ -130,7 +135,7 @@ module Jekyll
             end
           else
             finished = true
-            puts asset.name
+            #puts asset.name
           end
         end
         # store the final asset path in the cache map
@@ -141,10 +146,12 @@ module Jekyll
 
       # write errors to the asset_pipeline_errors.log include so users can see errors on
       # page refresh instead of having to view the console window
-      error_log = File.join(self.project_source, "_includes", @error_log_file)
-      # don't create if the includes directory doesn't exist
-      if File.exists?(File.dirname(error_log))
-        output = errors.length > 0 ? errors.join("\n\n") : ""
+      error_log = File.join(self.project_source, @includes_dir, @error_log_file)
+      # don't create if the include file doesn't exist
+      if File.exists?(File.join(self.project_source, @includes_dir, @error_include_file))
+        output = "<span id=\"asset_pipeline_errors\">" +
+          (errors.length > 0 ? errors.join("\n\n") : "").gsub("&", "&amp;").gsub("<", "&lt;") +
+          "</span>"
         current = File.exists?(error_log) ? File.read(error_log).chomp : nil
         # only write file if there are changes, if the directory watcher is running it'll infinitely cycle
         if output != current
@@ -190,10 +197,10 @@ module Jekyll
 
   class Asset < Jekyll::StaticFile
 
-    # In addition to adding our new attributes...
+    # New attributes
     attr_reader :original_name
     attr_accessor :content, :in_cache
-    # ...expose the private fields of Jekyll::StaticFile
+    # Exposed private fields of Jekyll::StaticFile
     attr_reader :dir
     attr_accessor :name, :base
 
