@@ -2,7 +2,7 @@
 
 ## Overview
 
-Jekyll Asset Pipeline is a lightweight way to run you assets (CSS, Javascript, etc) through various converters and minifiers when building your Jekyll site.
+Jekyll Asset Pipeline is a lightweight way to run your assets (CSS, Javascript, etc) through various converters and minifiers when building your Jekyll site.
 
 Perhaps you write all your stylesheets in SASS, your Javascript in CoffeScript and you want the output minified as well. All easy, and little to no configuration required.
 
