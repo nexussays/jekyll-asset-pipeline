@@ -2,7 +2,9 @@
 
 ## Overview
 
-Jekyll Asset Pipeline is a lightweight (ie, little to configure or manage)
+Jekyll Asset Pipeline is a lightweight way to run you assets (CSS, Javascript, etc) through various converters and minifiers when building your Jekyll site.
+
+Perhaps you write all your stylesheets in SASS, your Javascript in CoffeScript and you want the output minified as well. All easy, and little to no configuration required.
 
 ## Setup
 
@@ -96,6 +98,12 @@ The destination will then look like this
             └── <bunch of CSS files>
 ```
 Simple, eh?
+
+### Referencing
+
+You can reference the resulting files in your layouts using standard HTML since the output file names and locations are deterministic.
+
+There is a possibility of adding an option to the pipeline to append random characters to the output files for cache-busting purposes (eg, `my-style-b8c3190af.css`), but currently no such option exists.
 
 ### Asset Pipeline Errors
 
