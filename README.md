@@ -123,15 +123,15 @@ You can reference the resulting files in your layouts using standard HTML since 
 
 It can be very helpful to easily see any asset-related errors when Jekyll is watching your project with `jekyll server --watch`. To that end, there is a way to include asset errors on your pages so you don't have to switch to your command prompt to see them.
 
-Unless your disable or remove `asseterrorlog_generator.rb`, two files will be generated as part of the asset pipeline: `asset_pipeline_errors`, the include file, and `asset_pipeline_errors.log`, which you can ignore entirely.
-
 In your main layout file, right after the start of `<body>`, add this:
 
 ```
 {% include asset_pipeline_errors %}
 ```
 
-If there are errors in the asset pipeline, they will be visible on your pages, making it easy to see on refresh. They can be styled using the id `#asset_pipeline_errors` like so:
+If there are errors in the asset pipeline, they will be visible on your pages, making it easy to see on refresh. If there are no errors, *nothing is added to the HTML*, so you can safely leave this in for production.
+
+The error block can be styled using the id `#asset_pipeline_errors` like so:
 
 ```css
 #asset_pipeline_errors
@@ -146,3 +146,5 @@ If there are errors in the asset pipeline, they will be visible on your pages, m
 	display: block;
 }
 ```
+
+If, for whatever reason, you don't want these two files to be generated as part of the asset pipeline (`asset_pipeline_errors`, the include file, and `asset_pipeline_errors.log`, which contains the log) just remove `asseterrorlog_generator.rb`.
