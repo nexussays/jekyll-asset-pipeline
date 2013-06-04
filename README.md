@@ -65,15 +65,25 @@ asset_pipeline_errors*
 
 **No need to modify your templates or HTML with custom Liquid blocks.** The only changes are with your assets.
 
-Each file in your assets directory (as defined in `_config.yml`) will be processed with the Converters in your Jekyll `_plugins` directory. Several are included here. **These are standard Jekyll Converters**, but the asset pipeline will run them on all files, not just ones with YAML "front-matter".
+Each file in your assets directory (as defined in `_config.yml`) will be processed with the Converters in your Jekyll `_plugins` directory. **These are standard Jekyll Converters**, but the asset pipeline will run them on all files, not just ones with YAML "front-matter".
 
-To have several converters run, just append multiple extensions to your files. For example, the file `syntax.generic.css.scss` will first run the highest priority Converter that matches the `scss` extension, and then the highest priority Converter that matches the `css` extension. (If you don't have any additional converters other than what is part of this project, then the SASS converter runs and then the CSS minifier)
+Several converters are included with this project, but any others you have in your `_plugins` dirctory will also be run on your assets.
+
+To have several converters run on a single file, append multiple extensions to your files, eg `syntax-coloring.css.scss`
+
+The above file will first run the highest-priority Converter that matches the `scss` extension, followed by the highest-priority Converter that matches the `css` extension. (If you don't have any additional converters other than what is part of this project, then the SASS converter runs and then the CSS minifier runs)
+
+
+### Bundling
+
+[in progress]
 
 ### Directory Structure
 
-When the pipeline runs, your assets will be processed and copied to your destination directory in the same folder structure you have here.
+When the pipeline runs, your assets will be processed and copied to your project's destination directory in the same folder structure as your assets directory.
 
-For example, my project looks like this:
+For example, if your project looks like this:
+
 ```
 .
 ├── _assets/
@@ -87,7 +97,8 @@ For example, my project looks like this:
 └── etc...
 ```
 
-The destination will then look like this
+Then the destination will look like this:
+
 ```
 .
 └── _site/
@@ -99,11 +110,14 @@ The destination will then look like this
 ```
 Simple, eh?
 
-### Referencing
+### HTML Tags
 
 You can reference the resulting files in your layouts using standard HTML since the output file names and locations are deterministic.
 
-There is a possibility of adding an option to the pipeline to append random characters to the output files for cache-busting purposes (eg, `my-style-b8c3190af.css`), but currently no such option exists.
+```HTML
+<link rel="stylesheet" href="/assets/styles/syntax-coloring.css">
+<script src="/assets/scripts/modernizr-2.6.2.js"></script>
+```
 
 ### Asset Pipeline Errors
 
