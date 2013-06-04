@@ -154,6 +154,8 @@ module Jekyll
           # simpleton HTML scaping
           errors.join("\n\n").gsub("&", "&amp;").gsub("<", "&lt;") +
           "</span>"
+        else
+          ""
         end
         current = File.exists?(error_log) ? File.read(error_log).chomp : nil
         # only write file if there are changes, if the directory watcher is running it'll infinitely cycle
