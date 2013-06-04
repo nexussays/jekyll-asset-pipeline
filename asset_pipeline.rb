@@ -149,9 +149,12 @@ module Jekyll
       error_log = File.join(self.project_source, @includes_dir, @error_log_file)
       # don't create if the include file doesn't exist
       if File.exists?(File.join(self.project_source, @includes_dir, @error_include_file))
-        output = "<span id=\"asset_pipeline_errors\">" +
-          (errors.length > 0 ? errors.join("\n\n") : "").gsub("&", "&amp;").gsub("<", "&lt;") +
+        output = if errors.length > 0 then
+          "<span id=\"asset_pipeline_errors\">" +
+          # simpleton HTML scaping
+          errors.join("\n\n").gsub("&", "&amp;").gsub("<", "&lt;") +
           "</span>"
+        end
         current = File.exists?(error_log) ? File.read(error_log).chomp : nil
         # only write file if there are changes, if the directory watcher is running it'll infinitely cycle
         if output != current
