@@ -86,27 +86,27 @@ For example, if your project looks like this:
 
 ```
 .
-├── _assets/
-|   └── assets/
-|       ├── scripts/
-|       |   └── <bunch of TypeScript files>
-|       └── styles/
-|           └── <bunch of SCSS files>
-├── _includes/
-├── _layouts/
-└── etc...
+|-- _assets/
+|   \-- assets/
+|       |-- scripts/
+|       |   \-- <bunch of TypeScript files>
+|       \-- styles/
+|           \-- <bunch of SCSS files>
+|-- _includes/
+|-- _layouts/
+\-- etc...
 ```
 
 Then the destination will look like this:
 
 ```
 .
-└── _site/
-    └── assets/
-        ├── scripts/
-        |   └── <bunch of Javascript files>
-        └── styles/
-            └── <bunch of CSS files>
+\-- _site/
+    \-- assets/
+        |-- scripts/
+        |   \-- <bunch of Javascript files>
+        \-- styles/
+            \-- <bunch of CSS files>
 ```
 Simple, eh?
 
