@@ -6,7 +6,7 @@ Jekyll Asset Pipeline is a lightweight way to run your assets (CSS, Javascript, 
 
 Perhaps you write all your stylesheets in SASS, your Javascript in CoffeScript and you want the output minified as well. All easy, and little to no configuration required.
 
-## Setup
+## Installing
 
 Grab this as a submodule in your Jekyll project repo:
 
@@ -52,7 +52,7 @@ You only need to add the location of your assets directory to your Jekyll `_conf
 assets:  ./_assets
 ```
 
-### Gitignore
+## Gitignore
 
 You'll also want to add thse two lines to your `.gitignore`:
 
