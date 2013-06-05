@@ -25,6 +25,8 @@ git pull origin master
 
 ## Requirements
 
+### Ruby Gems
+
 In order to use the CSS and JS compression, you'll need to add two gems to your `Gemfile` and run `bundle install`
 
 ```ruby
@@ -44,7 +46,7 @@ gem install closure-compiler --version "= 1.1"
 
 Alternatively, if you don't want those features, you can just delete `compress_css.rb` and `compress_js.rb`.
 
-### Configuration
+### Jekyll Configuration
 
 You only need to add the location of your assets directory to your Jekyll `_config.yml`. Just a single line.
 
