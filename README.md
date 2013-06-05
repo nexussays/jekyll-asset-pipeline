@@ -44,7 +44,7 @@ gem install closure-compiler --version "= 1.1"
 
 Alternatively, if you don't want those features, you can just delete `compress_css.rb` and `compress_js.rb`.
 
-## Configuration
+### Configuration
 
 You only need to add the location of your assets directory to your Jekyll `_config.yml`. Just a single line.
 
@@ -52,7 +52,7 @@ You only need to add the location of your assets directory to your Jekyll `_conf
 assets:  ./_assets
 ```
 
-## Gitignore
+### Gitignore
 
 You'll also want to add thse two lines to your `.gitignore`:
 
