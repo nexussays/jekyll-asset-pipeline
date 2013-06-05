@@ -73,6 +73,11 @@ To have several converters run on a single file, append multiple extensions to y
 
 The above file will first run the highest-priority Converter that matches the `scss` extension, followed by the highest-priority Converter that matches the `css` extension. (If you don't have any additional converters other than what is part of this project, then the SASS converter runs and then the CSS minifier runs)
 
+### Custom Converters
+
+Converters are regular [Jekyll Converters](http://jekyllrb.com/docs/plugins/#converters), with the one change that they will run on *everything in your assets folder*, regardless of whether or not they have YAML front-matter.
+
+If you write a new converter, send a pull request so we can add it to the core project!
 
 ### Bundling
 
@@ -115,11 +120,14 @@ Simple, eh?
 You can reference the resulting files in your layouts using standard HTML since the output file names and locations are deterministic.
 
 ```HTML
+<!-- source file: /_assets/assets/scripts/syntax-coloring.css.scss -->
 <link rel="stylesheet" href="/assets/styles/syntax-coloring.css">
+
+<!-- source file: /_assets/assets/scripts/modernizr-2.6.2.js.ts -->
 <script src="/assets/scripts/modernizr-2.6.2.js"></script>
 ```
 
-### Asset Pipeline Errors
+## Asset Pipeline Errors
 
 It can be very helpful to easily see any asset-related errors when Jekyll is watching your project with `jekyll server --watch`. To that end, there is a way to include asset errors on your pages so you don't have to switch to your command prompt to see them.
 
