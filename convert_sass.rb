@@ -6,7 +6,16 @@ module Jekyll
     priority :normal
 
     def initialize(config)
-
+      @settings = { syntax: :scss }
+      # Check for presence of assets dir in config.
+      # Don't assume we're running from within asset-pipeline
+      if config["assets"] != nil
+        # Add all subdirectories to load path.
+        # The likelihood of same-named files in different directories is outweighed by the convenience of
+        # not having to track down and understand obscure @import errors from SASS
+        @settings[:load_paths] = Dir[File.join(config["assets"], "**/")]
+      end
+      #p @settings
     end
 
     def matches(ext)
@@ -19,8 +28,7 @@ module Jekyll
     end
 
     def convert(content)
-      # output as ":style => :expanded" because compression is separate (compress_css.rb)
-      return Sass::Engine.new(content, syntax: :scss, :style => :expanded).render
+      return Sass::Engine.new(content, @settings).render
     end
   end
 end
