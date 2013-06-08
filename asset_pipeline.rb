@@ -9,6 +9,7 @@ module Jekyll
     attr_accessor :project_source, :project_dest, :asset_source
 
     def initialize(config)
+      @bundle = true
       @includes_dir = "_includes"
       @error_include_file = "asset_pipeline_errors"
       @error_log_file = "asset_pipeline_errors.log"
@@ -32,7 +33,7 @@ module Jekyll
       @cache_root = File.join(self.project_source, self.asset_source, @asset_cache_dir)
 
       # load map file which contains the SHA1 hash of every file the last time it was processed
-      @map_file = File.join(@cache_root, ".map")
+      @map_file = File.join(@cache_root, "cache.yaml")
       @map = Hash.new
       begin
         @map = YAML.load_file(@map_file) if File.exists?(@map_file)
@@ -46,6 +47,7 @@ module Jekyll
       @assets = []
       self.read_files(self.asset_source)
       self.process
+      self.bundle if @bundle
       self.write
     end
 
@@ -138,8 +140,6 @@ module Jekyll
             #puts asset.name
           end
         end
-        # store the final asset path in the cache map
-        @map[asset.orig_path]['out'] = File.join(asset.dir, asset.name)
       end
       # remove assets that errored out during procesing
       @assets.delete_if {|a| bad_assets.include?(a) }
@@ -150,7 +150,10 @@ module Jekyll
       # don't create if the include file doesn't exist
       if File.exists?(File.join(self.project_source, @includes_dir, @error_include_file))
         output = if errors.length > 0 then
-          "<span id=\"asset_pipeline_errors\">" +
+          "<span id=\"asset_pipeline_errors\" " +
+            "style=\"background-color: red;color: white;font-weight: bold;"+
+            "font-family:'Inconsolata','Consolas','Andale Mono',monospace;"+
+            "font-size: 12px;white-space: pre;width: 100%;display: block;\">" + 
           # simpleton HTML scaping
           errors.join("\n\n").gsub("&", "&amp;").gsub("<", "&lt;") +
           "</span>"
@@ -165,7 +168,51 @@ module Jekyll
           end
         end
       end
+    end
 
+    # TODO: Clean up this method
+    def bundle
+      collections = Hash.new
+      # aggregate all assets of the same type that share the same prefix
+      @assets.each do |asset|
+        #puts "#{asset.name} <= #{asset.original_name}"
+        sections = asset.name.split('.')
+        collections[sections[0]] = Hash.new if collections[sections[0]] == nil
+        hash = collections[sections[0]]
+        hash[sections[-1]] = [] if hash[sections[-1]] == nil
+        hash[sections[-1]] << asset
+      end
+
+      # combine files
+      collections.each do |k1, v1|
+        v1.each do |k, v|
+          if v.length > 1
+            pack = nil
+            v.sort {|x,y| x.original_name <=> y.original_name }
+            #puts "#{k1}: #{v.length}"
+            v.each do |bundle_asset|
+              # Pick the first file as the one to merge the others into
+              if pack == nil
+                pack = bundle_asset
+                pack.name = "#{k1}.#{k}"
+                #puts "Bundling. #{pack.name} <= #{bundle_asset.original_name}"
+                next
+              end
+              #puts "Bundling. #{pack.name} <= #{bundle_asset.original_name}"
+              pack.content << bundle_asset.content
+              @assets.delete bundle_asset
+              # add the bundled asset to the map since we're removing it from the aray
+              @map[bundle_asset.orig_path]['out'] = File.join(pack.dir, pack.name)
+            end
+            #puts "Bundled #{k1}.#{k}"
+          end
+        end
+      end
+
+      # store the final asset path in the cache map
+      @assets.each do |asset|
+        @map[asset.orig_path]['out'] = File.join(asset.dir, asset.name)
+      end
     end
 
     def write

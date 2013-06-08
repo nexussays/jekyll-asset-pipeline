@@ -48,7 +48,7 @@ Alternatively, if you don't want those features, you can just delete `compress_c
 
 ### Jekyll Configuration
 
-You only need to add the location of your assets directory to your Jekyll `_config.yml`. Just a single line.
+You only need to add the location of your assets directory to your Jekyll `_config.yml`. You'll want to make sure this is a directory that Jekyll ignores by default by prefixing it with `_` or `.`.
 
 ```YAML
 assets:  ./_assets
@@ -65,25 +65,37 @@ asset_pipeline_errors*
 
 ## Usage
 
-**No need to modify your templates or HTML with custom Liquid blocks.** The only changes are with your assets.
+No need to modify your templates or HTML with custom Liquid blocks. The only changes are with your assets.
 
-Each file in your assets directory (as defined in `_config.yml`) will be processed with the Converters in your Jekyll `_plugins` directory. **These are standard Jekyll Converters**, but the asset pipeline will run them on all files, not just ones with YAML "front-matter".
+### Converters
 
-Several converters are included with this project, but any others you have in your `_plugins` dirctory will also be run on your assets.
+Converters are regular [Jekyll Converters](http://jekyllrb.com/docs/plugins/#converters), with the one change that they will run on *everything in your assets directory*, regardless of whether or not they have YAML front-matter.
 
-To have several converters run on a single file, append multiple extensions to your files, eg `syntax-coloring.css.scss`
+Several converters are included with this project, but any others in your `_plugins` dirctory will also be run on your assets.
 
-The above file will first run the highest-priority Converter that matches the `scss` extension, followed by the highest-priority Converter that matches the `css` extension. (If you don't have any additional converters other than what is part of this project, then the SASS converter runs and then the CSS minifier runs)
+**If you write a new converter, send a pull request so we can add it to the core project!**
 
-### Custom Converters
+### Running Mulitiple Converters on Assets 
 
-Converters are regular [Jekyll Converters](http://jekyllrb.com/docs/plugins/#converters), with the one change that they will run on *everything in your assets folder*, regardless of whether or not they have YAML front-matter.
+To have several converters run on a single file, append multiple extensions to your files.
 
-If you write a new converter, send a pull request so we can add it to the core project!
+For example, the file `syntax-coloring.css.scss` will first run the highest-priority Converter that matches the `scss` extension, followed by the highest-priority Converter that matches the `css` extension.
+
+> If you don't have any additional converters other than what is part of this project, then in the above example, first the SASS converter runs and then the CSS minifier runs.
 
 ### Bundling
 
-[in progress]
+To bundle assets into a single file, name them with the same prefix. For example, these files:
+
+```
+main.fonts.scss
+main.scss
+main.structure.scss
+main.syntax.color.scss
+main.syntax.color-generic.scss
+```
+
+Will result in a single output file named `main.css`.
 
 ### Directory Structure
 
@@ -122,14 +134,24 @@ Simple, eh?
 You can reference the resulting files in your layouts using standard HTML since the output file names and locations are deterministic.
 
 ```HTML
-<!-- source file: /_assets/assets/scripts/syntax-coloring.css.scss -->
-<link rel="stylesheet" href="/assets/styles/syntax-coloring.css">
+<!--
+	source files:
+		/_assets/assets/styles/main.fonts.scss
+		/_assets/assets/styles/main.scss
+		/_assets/assets/styles/main.structure.scss
+		/_assets/assets/styles/main.syntax.color.scss
+		/_assets/assets/styles/main.syntax.color-generic.scss
+-->
+<link rel="stylesheet" href="/assets/styles/main.css">
 
-<!-- source file: /_assets/assets/scripts/modernizr-2.6.2.js.ts -->
-<script src="/assets/scripts/modernizr-2.6.2.js"></script>
+<!--
+	source files:
+		/_assets/assets/scripts/my_site.ts
+-->
+<script src="/assets/scripts/my_site.js"></script>
 ```
 
-## Asset Pipeline Errors
+## Errors
 
 It can be very helpful to easily see any asset-related errors when Jekyll is watching your project with `jekyll server --watch`. To that end, there is a way to include asset errors on your pages so you don't have to switch to your command prompt to see them.
 
@@ -141,20 +163,6 @@ In your main layout file, right after the start of `<body>`, add this:
 
 If there are errors in the asset pipeline, they will be visible on your pages, making it easy to see on refresh. If there are no errors, *nothing is added to the HTML*, so you can safely leave this in for production.
 
-The error block can be styled using the id `#asset_pipeline_errors` like so:
+The error block has styling to make it bright red, but you can hook in additional styling by using the id `#asset_pipeline_errors`.
 
-```css
-#asset_pipeline_errors
-{
-	background-color: red;
-	color: white;
-	font-weight: bold;
-	font-family: "Consolas";
-	font-size: 12px;
-	white-space: pre;
-	width: 100%;
-	display: block;
-}
-```
-
-If, for whatever reason, you don't want these two files to be generated as part of the asset pipeline (`asset_pipeline_errors`, the include file, and `asset_pipeline_errors.log`, which contains the log) just remove `asseterrorlog_generator.rb`.
+> If, for whatever reason, you don't want these two files to be generated as part of the asset pipeline (`asset_pipeline_errors`, the include file, and `asset_pipeline_errors.log`, which contains the log) just delete `asseterrorlog_generator.rb`.
