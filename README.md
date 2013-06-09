@@ -153,6 +153,8 @@ You can reference the resulting files in your layouts using standard HTML since 
 
 ## Errors
 
+### Converter & Syntax Errors
+
 It can be very helpful to easily see any asset-related errors when Jekyll is watching your project with `jekyll server --watch`. To that end, there is a way to include asset errors on your pages so you don't have to switch to your command prompt to see them.
 
 In your main layout file, right after the start of `<body>`, add this:
@@ -166,3 +168,7 @@ If there are errors in the asset pipeline, they will be visible on your pages, m
 The error block has styling to make it bright red, but you can hook in additional styling by using the id `#asset_pipeline_errors`.
 
 > If, for whatever reason, you don't want these two files to be generated as part of the asset pipeline (`asset_pipeline_errors`, the include file, and `asset_pipeline_errors.log`, which contains the log) just delete `asseterrorlog_generator.rb`.
+
+### Bugs In Asset Pipeline
+
+If you encounter an error with the asset pipeline code, try deleting `.asset_cache` in your assets directory. If that doesn't solve the problem, see if there is an open issue for the problem and open a new one if there is not.

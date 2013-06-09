@@ -14,6 +14,7 @@ module Jekyll
       @error_include_file = "asset_pipeline_errors"
       @error_log_file = "asset_pipeline_errors.log"
       @asset_cache_dir = ".asset_cache"
+      @bundle_dir = ".bundles"
     end
 
     def generate(site)
@@ -47,6 +48,7 @@ module Jekyll
       @assets = []
       self.read_files(self.asset_source)
       self.process
+      self.write_cache
       self.bundle if @bundle
       self.write
     end
@@ -144,6 +146,11 @@ module Jekyll
       # remove assets that errored out during procesing
       @assets.delete_if {|a| bad_assets.include?(a) }
 
+      # store the final asset path in the cache map
+      @assets.each do |asset|
+        @map[asset.orig_path]['out'] = File.join(asset.dir, asset.name)
+      end
+
       # write errors to the asset_pipeline_errors.log include so users can see errors on
       # page refresh instead of having to view the console window
       error_log = File.join(self.project_source, @includes_dir, @error_log_file)
@@ -168,6 +175,29 @@ module Jekyll
           end
         end
       end
+      puts "  Assets processed."
+    end
+
+    def write_cache
+      # write out each procssed asset file to the cache
+      @assets.each do |asset|
+        cache =  asset.destination(@cache_root)
+        # If the asset is in the cache already, load the cached data in case we bundle
+        if asset.in_cache
+          asset.content = File.read(cache)
+        # otherwise persist changes to disk in cache directory
+        else
+          FileUtils.mkdir_p(File.dirname(cache))
+          File.open(cache, 'w') do |f|
+            f.write(asset.content)
+          end
+        end
+      end
+
+      # dump the file mapping
+      File.open(@map_file, 'w') do |file|
+        file.write(YAML::dump(@map))
+      end
     end
 
     # TODO: Clean up this method
@@ -188,61 +218,54 @@ module Jekyll
         v1.each do |k, v|
           if v.length > 1
             pack = nil
+            in_cache = true
             v.sort {|x,y| x.original_name <=> y.original_name }
             #puts "#{k1}: #{v.length}"
             v.each do |bundle_asset|
-              # Pick the first file as the one to merge the others into
+              in_cache &&= bundle_asset.in_cache
+              # Initialize the bundle file with the first file in the bundle
               if pack == nil
                 pack = bundle_asset
                 pack.name = "#{k1}.#{k}"
+                pack.is_bundle = true
                 #puts "Bundling. #{pack.name} <= #{bundle_asset.original_name}"
                 next
               end
               #puts "Bundling. #{pack.name} <= #{bundle_asset.original_name}"
               pack.content << bundle_asset.content
               @assets.delete bundle_asset
-              # add the bundled asset to the map since we're removing it from the aray
-              @map[bundle_asset.orig_path]['out'] = File.join(pack.dir, pack.name)
             end
-            #puts "Bundled #{k1}.#{k}"
+
+            # If a single part of the bundle is not in cache, write out the new bundle
+            if !in_cache
+              #puts "Bundled #{k1}.#{k}"
+              cache =  pack.destination(File.join(@cache_root, @bundle_dir))
+              FileUtils.mkdir_p(File.dirname(cache))
+              File.open(cache, 'w') do |f|
+                f.write(pack.content)
+              end
+            end
           end
         end
       end
 
-      # store the final asset path in the cache map
-      @assets.each do |asset|
-        @map[asset.orig_path]['out'] = File.join(asset.dir, asset.name)
-      end
+      puts "    Assets bundled."
     end
 
     def write
-
-      # write out each procssed asset file to the cache
+      # copy each final asset or asset bundle to jekyll's static_files so they are copied to the destination
       @assets.each do |asset|
-        cache =  asset.destination(@cache_root)
-
-        # persist changes to disk in cache directory
-        unless asset.in_cache
-          FileUtils.mkdir_p(File.dirname(cache))
-          File.open(cache, 'w') do |f|
-            f.write(asset.content)
-          end
-        end
-
         # Add the asset cache directory to the base path so the files will be picked up on disk
-        asset.base = File.join(asset.base, @asset_cache_dir)
+        if asset.is_bundle
+          asset.base = File.join(asset.base, File.join(@asset_cache_dir, @bundle_dir))
+        else
+          asset.base = File.join(asset.base, @asset_cache_dir)
+        end
         
         # add it to the sites static_files array
         @site.static_files << asset
       end
-
-      # dump the file mapping
-      File.open(@map_file, 'w') do |file|
-        file.write(YAML::dump(@map))
-      end
-
-      puts "  Assets processed."
-
+      #puts "      Assets saved."
     end
 
   end
@@ -251,7 +274,7 @@ module Jekyll
 
     # New attributes
     attr_reader :original_name
-    attr_accessor :content, :in_cache
+    attr_accessor :content, :in_cache, :is_bundle
     # Exposed private fields of Jekyll::StaticFile
     attr_reader :dir
     attr_accessor :name, :base
@@ -259,6 +282,7 @@ module Jekyll
     def initialize(site, base, dir, name)
       super(site, base, dir, name)
       self.in_cache = false
+      self.is_bundle = false
       self.content = File.read(File.join(base, dir, name))
       @original_name = name
       @orig_path = File.join(@dir, @original_name)
