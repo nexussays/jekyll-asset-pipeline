@@ -85,23 +85,34 @@ For example, the file `syntax-coloring.css.scss` will first run the highest-prio
 
 ### Bundling
 
-To bundle assets into a single file, name them with the same prefix. For example, these files:
+To bundle assets into a single file, name them with the same prefix, using `.` to delimit it.
+
+For example, these files:
 
 ```
+main.core.scss
 main.fonts.scss
-main.scss
+main.pygments.scss
+main.pygments-generic.scss
 main.structure.scss
-main.syntax.color.scss
-main.syntax.color-generic.scss
 ```
 
 Will result in a single output file named `main.css`.
+
+Bundling can co-exist with multiple converters:
+```
+script.animations.ts.erb
+script.timer.ts.erb
+```
+Will result in a single output file named `script.js`.
+
+> This example assumes you have obtained, or have written, an ERB converter. No such converter is provided with this project at the moment.
 
 ### Directory Structure
 
 When the pipeline runs, your assets will be processed and copied to your project's destination directory in the same folder structure as your assets directory.
 
-For example, if your project looks like this:
+For example, if your Jekyll project has this directory structure:
 
 ```
 .
@@ -113,13 +124,14 @@ For example, if your project looks like this:
 |           \-- <bunch of SCSS files>
 |-- _includes/
 |-- _layouts/
-\-- etc...
+\-- _site/
 ```
 
-Then the destination will look like this:
+Then the assets output will look like this:
 
 ```
 .
+|-- ...
 \-- _site/
     \-- assets/
         |-- scripts/
@@ -131,16 +143,16 @@ Simple, eh?
 
 ### HTML Tags
 
-You can reference the resulting files in your layouts using standard HTML since the output file names and locations are deterministic.
+Since the output file names and directories are deterministic (see above), you can reference the resulting files in your layouts using standard HTML.
 
 ```HTML
 <!--
 	source files:
+		/_assets/assets/styles/main.core.scss
 		/_assets/assets/styles/main.fonts.scss
-		/_assets/assets/styles/main.scss
+		/_assets/assets/styles/main.pygments.scss
+		/_assets/assets/styles/main.pygments-generic.scss
 		/_assets/assets/styles/main.structure.scss
-		/_assets/assets/styles/main.syntax.color.scss
-		/_assets/assets/styles/main.syntax.color-generic.scss
 -->
 <link rel="stylesheet" href="/assets/styles/main.css">
 
@@ -171,4 +183,6 @@ The error block has styling to make it bright red, but you can hook in additiona
 
 ### Bugs In Asset Pipeline
 
-If you encounter an error with the asset pipeline code, try deleting `.asset_cache` in your assets directory. If that doesn't solve the problem, see if there is an open issue for the problem and open a new one if there is not.
+If you encounter an error with the asset pipeline code, try deleting `.asset_cache` in your assets directory.
+
+If deleting `.asset_cache` does not solve the issue, check the GitHub issues tracker and open a bug if one does not exist. Or better yet, fix it and send a pull request :)
