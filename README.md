@@ -23,7 +23,7 @@ cd _plugins/asset_pipeline
 git pull origin master
 ```
 
-## Requirements
+## Setup
 
 ### Ruby Gems
 
